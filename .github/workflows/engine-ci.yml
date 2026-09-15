@@ -1,0 +1,40 @@
+name: Engine CI
+
+# Builds the C++20 engine skeleton (engine/) and runs the acceptance test
+# suites on Linux and macOS.
+
+on:
+  push:
+    branches:
+      - main
+      - 'arena/**'
+    paths:
+      - 'engine/**'
+      - '.github/workflows/engine-ci.yml'
+  pull_request:
+    paths:
+      - 'engine/**'
+      - '.github/workflows/engine-ci.yml'
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -S engine -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Headless smoke render
+        run: ./build/s7engine --sample-rate 48000 --seconds 1 --buffer 64
