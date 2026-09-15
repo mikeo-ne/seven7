@@ -19,6 +19,26 @@ npm run docs:preview # serve the production build locally → http://localhost:4
 
 **Deploy to Vercel:** import this repository in [Vercel](https://vercel.com/new) — no settings required. [`vercel.json`](vercel.json) already declares the VitePress framework, build command (`npm run docs:build`), and output directory (`docs/.vitepress/dist`). Every push to the tracked branch produces a preview deployment; merges to `main` go to production. The [`Docs build`](.github/workflows/docs-build.yml) GitHub Action builds the same target on every push/PR so a broken site can never merge.
 
+> **Custom domain:** in the Vercel project → *Settings → Domains*, add your domain and point DNS at Vercel. No code change needed — canonical URLs, Open Graph tags, and the sitemap resolve automatically from the Vercel environment (or set `S7_SITE_URL` to override).
+
+## Engine
+
+[`engine/`](engine) contains the first C++20 vertical slice of the S7 Audio Engine: the sample-accuracy contract ([ARC-TIME](docs/01-system-architecture.md)), hybrid-buffer lane scheduler (ARC-ENG-01…03), cycle-safe routing + delay-compensation math (MIX-05/07), and fader/pan/summing kernels — each with acceptance tests wired into CI:
+
+```bash
+cmake -B build -S engine && cmake --build build -j
+ctest --test-dir build --output-on-failure   # 4 suites, incl. 72k tick⇄sample identities
+./build/s7engine                              # headless render + PDC report + checksum
+```
+
+## Repository layout
+
+```
+docs/     Specification set (00–06) + VitePress site config  → Vercel
+engine/   C++20 engine skeleton (tested)                     → Engine CI
+.github/  docs-build.yml (site CI) · engine-ci.yml (C++ CI)
+```
+
 ---
 
 ## Design Documents

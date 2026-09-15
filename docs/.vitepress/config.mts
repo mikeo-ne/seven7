@@ -1,13 +1,25 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig, type HeadConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
+
+// Canonical site URL. On Vercel this resolves automatically from the deployment;
+// set S7_SITE_URL (full URL) to override for a custom domain, e.g. https://docs.seven7.audio
+const siteUrl =
+  process.env.S7_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'https://seven7.vercel.app')
+
+const defaultDescription =
+  'Design blueprint for seven7 — a next-generation DAW bridging Logic Pro creativity and Pro Tools precision.'
 
 // https://vitepress.dev/reference/site-config
 export default withMermaid(
   defineConfig({
     title: 'seven7',
     titleTemplate: 'seven7 · DAW Blueprint',
-    description:
-      'Design blueprint for seven7 — a next-generation DAW bridging Logic Pro creativity and Pro Tools precision.',
+    description: defaultDescription,
     cleanUrls: true,
     lastUpdated: true,
     appearance: 'dark',
@@ -19,10 +31,31 @@ export default withMermaid(
       },
     },
 
+    sitemap: { hostname: siteUrl },
+
     head: [
       ['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }],
       ['meta', { name: 'theme-color', content: '#17181c' }],
     ],
+
+    // Per-page Open Graph / Twitter cards (custom domain + social unfurls ready).
+    transformHead({ pageData }) {
+      const page = pageData.relativePath.replace(/((^|\/)index)?\.md$/, '')
+      const url = `${siteUrl}/${page}`
+      const head: HeadConfig[] = [
+        ['meta', { property: 'og:type', content: 'website' }],
+        ['meta', { property: 'og:url', content: url }],
+        ['meta', { property: 'og:site_name', content: 'seven7 · DAW Blueprint' }],
+        ['meta', { property: 'og:image', content: `${siteUrl}/og-image.png` }],
+        ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+        ['meta', { name: 'twitter:image', content: `${siteUrl}/og-image.png` }],
+      ]
+      const title = pageData.frontmatter.title ?? pageData.title
+      if (title) head.push(['meta', { property: 'og:title', content: `${title} · seven7` }])
+      const description = pageData.frontmatter.description ?? defaultDescription
+      head.push(['meta', { property: 'og:description', content: String(description) }])
+      return head
+    },
 
     mermaid: {
       // docs: https://mermaid.js.org/config/setup/modules/mermaidAPI.html#mermaidapi-configuration-defaults
