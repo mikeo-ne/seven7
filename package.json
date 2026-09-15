@@ -1,0 +1,20 @@
+{
+  "name": "seven7",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Design blueprint for seven7 — a next-generation DAW bridging Logic Pro and Pro Tools.",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs --host 0.0.0.0 --port 5173",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host 0.0.0.0 --port 4173"
+  },
+  "devDependencies": {
+    "mermaid": "^11.4.1",
+    "vitepress": "^1.6.3",
+    "vitepress-plugin-mermaid": "^2.0.17"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

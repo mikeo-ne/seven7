@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# VitePress build output & cache
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# Tooling / OS noise
+*.log
+.DS_Store
