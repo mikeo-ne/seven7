@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>seven7 — Precision</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23202226'/%3E%3Cpath d='M16 5l11 11-11 11L5 16z' fill='%23ff8c1a'/%3E%3Cpath d='M16 10l6 6-6 6-6-6z' fill='%23202226'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/protools.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════ Menu bar ═══════════ -->
+  <div id="menubar">
+    <div class="menu-item" data-menu="file">File</div>
+    <div class="menu-item" data-menu="track">Track</div>
+    <div class="menu-item" data-menu="view">View</div>
+    <div class="menu-item" data-menu="monitor">Monitor</div>
+    <div class="menu-item" data-menu="help">Help</div>
+    <div id="menubar-right"><span class="s7-diamond"></span> seven7 <span class="dim">· engine live</span></div>
+  </div>
+
+  <!-- ═══════════ Title bar ═══════════ -->
+  <div id="titlebar">
+    <span class="s7-diamond lg"></span>
+    <span id="project-name">Session 1</span>
+    <span class="dim">▸ Alt 001</span>
+    <div class="tb-spacer"></div>
+    <div class="ws-pill" title="Workspace (UIW-02)">Workspace:
+      <span class="ws-opt">Canvas</span><span class="ws-opt on">● Precision</span>
+    </div>
+    <div id="input-status" class="input-status" title="Input device state">INPUT: <b id="input-state">—</b></div>
+  </div>
+
+  <!-- ═══════════ Toolbar ═══════════ -->
+  <div id="toolbar">
+    <div class="tb-group" title="Edit modes (UIW-07)">
+      <span class="tb-cap">Edit:</span>
+      <button class="tb-btn mode on" data-mode="slip">Slip</button>
+      <button class="tb-btn mode" data-mode="grid">Grid</button>
+      <button class="tb-btn mode" data-mode="shuffle">Shfl</button>
+      <button class="tb-btn mode" data-mode="spot">Spot</button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <span class="tb-cap">Tool:</span>
+      <button class="tb-btn on" id="tool-smart" title="Smart Tool (UIW-06)">✎ Smart</button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group transport" title="Transport: Space = play/stop · R = record · L = loop">
+      <button class="tb-btn tr" id="btn-stop"  title="Stop (Space)">⏹</button>
+      <button class="tb-btn tr" id="btn-play"  title="Play (Space)">▶</button>
+      <button class="tb-btn tr rec" id="btn-rec" title="Record (R)">●</button>
+      <button class="tb-btn tr" id="btn-loop"  title="Loop (L)">⤢</button>
+      <button class="tb-btn tr" id="btn-count" title="Count-in: 1 bar">⏱ Count</button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" id="btn-demo" title="Synthesise a 4-bar drum + bass demo into the first two tracks">♪ Demo loop</button>
+    </div>
+    <div class="tb-spacer"></div>
+    <div class="tb-group dim small">
+      <span id="hw-summary">audio engine offline</span>
+    </div>
+  </div>
+
+  <!-- ═══════════ Control bar / LCD ═══════════ -->
+  <div id="controlbar">
+    <div class="lcd" id="lcd-pos" title="Position (bars beats frames · 960 PPQ)">1 1 1 00</div>
+    <div class="lcd small" id="lcd-smp" title="Absolute sample position">0 smp</div>
+    <div class="lcd-sep"></div>
+    <div class="lcd small bpm" id="lcd-bpm" title="Tempo — click to change">120.000</div>
+    <div class="lcd-cap">BPM</div>
+    <div class="lcd small" id="lcd-sig">4/4</div>
+    <div class="lcd-sep"></div>
+    <div class="lcd small" id="lcd-dev" title="Device / buffer">48.0 kHz · 256 smp</div>
+    <div class="lcd-cap">DEVICE</div>
+  </div>
+
+  <!-- ═══════════ Workspace ═══════════ -->
+  <div id="workspace">
+    <div id="track-scroll">
+      <div id="track-row">
+        <div id="headers">
+          <div id="ruler-corner"><span>BAR.BEAT.FRAME</span></div>
+        </div>
+        <div id="timeline-wrap"><canvas id="timeline"></canvas></div>
+      </div>
+    </div>
+    <div id="divider" title="Drag to resize mixer"></div>
+    <div id="mixer">
+      <div id="mixer-top">
+        <span class="tb-cap">Groups:</span>
+        <span id="group-letters" class="group-letters"></span>
+        <div class="tb-spacer"></div>
+        <span class="dim small">Precision mixer · docked (UIW-03)</span>
+      </div>
+      <div id="strips"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ Status bar ═══════════ -->
+  <div id="statusbar">
+    <span id="st-pdc" class="st-ok">PDC: ON · cap 32768 · worst 0 smp ●</span>
+    <span class="st-sep">|</span>
+    <span id="st-lane">Lane: MAE</span>
+    <span class="st-sep">|</span>
+    <span id="st-zoom">Zoom: 1 bar = 160 px</span>
+    <div class="tb-spacer"></div>
+    <span id="st-note" class="dim">Space play/stop · R record · L loop · ⌃/⌘+wheel zoom</span>
+  </div>
+</div>
+
+<!-- ═══════════ Menus ═══════════ -->
+<div id="menu-layer" hidden>
+  <div class="menu" data-menu="file">
+    <button data-act="new">New Session (clear)</button>
+    <button data-act="demo">Load Demo Loop</button>
+    <hr>
+    <button data-act="bounce-loop">Bounce Loop → WAV…</button>
+    <button data-act="bounce-all">Bounce All → WAV…</button>
+  </div>
+  <div class="menu" data-menu="track">
+    <button data-act="add-track">Add Track</button>
+    <button data-act="del-track">Delete Selected Track</button>
+    <button data-act="clear-clips">Clear Selected Clips</button>
+    <hr>
+    <button data-act="arm-all">Record-Enable All</button>
+    <button data-act="disarm-all">Record-Disable All</button>
+  </div>
+  <div class="menu" data-menu="view">
+    <button data-act="zoom-in">Zoom In</button>
+    <button data-act="zoom-out">Zoom Out</button>
+    <button data-act="zoom-fit">Zoom to Fit (4 bars)</button>
+  </div>
+  <div class="menu" data-menu="monitor">
+    <button data-act="buf-128">Buffer: 128 samples (~2.7 ms)</button>
+    <button data-act="buf-256">Buffer: 256 samples (~5.3 ms)</button>
+    <button data-act="buf-512">Buffer: 512 samples (~10.7 ms)</button>
+    <button data-act="buf-1024">Buffer: 1024 samples (~21.3 ms)</button>
+  </div>
+  <div class="menu" data-menu="help">
+    <button data-act="about">About seven7</button>
+  </div>
+</div>
+
+<!-- ═══════════ Context menu ═══════════ -->
+<div id="ctxmenu" hidden>
+  <button data-act="rename">Rename Track</button>
+  <button data-act="clear-clips">Clear Clips</button>
+  <hr>
+  <button data-act="delete" class="danger">Delete Track</button>
+</div>
+
+<!-- ═══════════ About dialog ═══════════ -->
+<div id="about-dlg" hidden>
+  <div class="dlg">
+    <h3><span class="s7-diamond"></span> seven7 <span class="dim">v0.9-live</span></h3>
+    <p class="dim">A working vertical slice of the seven7 DAW, built from the repository
+    blueprint (docs/00–06). Pro Tools-style Precision workspace (UIW-03).</p>
+    <ul>
+      <li>Live I/O, record &amp; playback — Web Audio engine, sample-accurate position (ARC-TIME port)</li>
+      <li>Mixer: MIX-03 fader taper · MIX-10 constant-power pan · 64-bit-equivalent master sum</li>
+      <li>Stock suite (MIX-12): S7 RoomWorks · S7 Echo · S7 Comp · S7 TapeSat</li>
+      <li>Native JUCE shell: <code>app/juce/</code> (see <code>BUILD-NATIVE.md</code>)</li>
+    </ul>
+    <p class="dim small">Space play/stop · R record · L loop · ,/. loop points · ⌃/⌘+wheel zoom · double-click fader = 0 dB</p>
+    <button id="about-close">Close</button>
+  </div>
+</div>
+
+<div id="toast" hidden></div>
+
+<script src="js/engine.js"></script>
+<script src="js/daw.js"></script>
+</body>
+</html>

@@ -4,7 +4,52 @@
 
 > **seven7** — a next-generation Digital Audio Workstation that bridges **Logic Pro's** creative, instrument-first workflow with **Pro Tools'** sample-accurate editing and industry-standard mixing precision.
 
-This repository currently contains the **authoritative design blueprint** for seven7: system architecture, UI/UX specifications, mix-engine and signal-flow specifications, and the Logic Pro compatibility strategy. Documents are written to implementation depth (requirement IDs, acceptance criteria, numeric budgets) and are the single source of truth for engineering.
+This repository contains the **authoritative design blueprint** for seven7: system architecture, UI/UX specifications, mix-engine and signal-flow specifications, and the Logic Pro compatibility strategy. Documents are written to implementation depth (requirement IDs, acceptance criteria, numeric budgets) and are the single source of truth for engineering — **plus working code**: a live browser DAW and a native JUCE shell built from the same engine kernels.
+
+## ▶ Run seven7 live
+
+### 1. Live DAW in the browser — [`web/`](web)
+
+A working Pro Tools-style **Precision workspace** (UIW-03) running entirely in your
+browser on the Web Audio API. It is the fastest way to feel the DAW:
+
+```bash
+cd web && python3 -m http.server 3000 --bind 0.0.0.0     # or: npx serve web
+# → http://localhost:3000   (mic capture needs a secure context: localhost or HTTPS)
+```
+
+What's real (not a mock):
+
+- **Transport** — play/stop/record, loop with draggable in/out points, 1-bar
+  count-in, metronome, editable BPM, sample-accurate position LCD
+  (`bar beat frame`, 960 PPQ — JS port of the ARC-TIME kernel)
+- **Record & playback** — live mic input (per-track arm/monitor), takes land on
+  the timeline as clips with waveforms; clips play back through the strip
+- **Mixer (docked, PT geometry)** — MIX-03 fader taper with 0 dB unity detent,
+  MIX-10 constant-power pan, mute/solo, green→red meters with 2 s peak-hold,
+  input trim, 2 insert slots/strip
+- **Stock suite (MIX-12 slice)** — S7 RoomWorks (convolution reverb), S7 Echo
+  (stereo delay), S7 Comp, S7 TapeSat (drive)
+- **Bounce** — offline render of loop/all → 16-bit WAV download
+- **Monitor menu** — live buffer-size switching (128–1024 smp) with
+  hardware-latency readout in the status bar
+
+**Keys:** `Space` play/stop · `R` record · `L` loop · `,` / `.` loop in/out ·
+`⌃/⌘ + wheel` zoom · double-click fader = 0 dB.
+No mic? `File → Load Demo Loop` synthesises a 4-bar drum + bass pattern.
+
+### 2. Native desktop shell (JUCE) — [`app/juce/`](app/juce)
+
+A standalone app that drives the **real C++ engine kernels**
+(`engine/src`) in the OS audio thread: fader taper (MIX-03), pan law (MIX-10),
+64-bit summing (ARC-T03) and the `TempoMap` position model (ARC-TIME) —
+monitor → record → save take as WAV. **You need JUCE 8 installed** (or CMake
+fetches it). Build steps: [`app/juce/BUILD-NATIVE.md`](app/juce/BUILD-NATIVE.md)
+
+```bash
+cmake -B build -S app/juce -DCMAKE_BUILD_TYPE=Release -DS7_JUCE_ROOT=/path/to/JUCE
+cmake --build build -j
+```
 
 ## Documentation site
 
@@ -34,8 +79,10 @@ ctest --test-dir build --output-on-failure   # 4 suites, incl. 72k tick⇄sample
 ## Repository layout
 
 ```
-docs/     Specification set (00–06) + VitePress site config  → Vercel
-engine/   C++20 engine skeleton (tested)                     → Engine CI
+web/      Live DAW — Pro Tools-style Precision workspace (Web Audio)   → any browser
+app/juce/ Native JUCE shell running the engine kernels in real I/O    → desktop
+engine/   C++20 engine skeleton (tested)                              → Engine CI
+docs/     Specification set (00–06) + VitePress site config           → Vercel
 .github/  docs-build.yml (site CI) · engine-ci.yml (C++ CI)
 ```
 
@@ -95,4 +142,8 @@ flowchart TD
 
 ## Status
 
-Blueprint phase — specifications v0.9, draft for review. See each document's header block for status and requirement traceability.
+Specifications v0.9, draft for review — **plus live vertical slices**: the
+browser DAW ([`web/`](web)) and the native JUCE shell
+([`app/juce/`](app/juce)) both run the spec's kernels (MIX-01…12, ARC-TIME,
+ARC-T03). See each document's header block for status and requirement
+traceability.
