@@ -11,3 +11,6 @@ build/
 # Tooling / OS noise
 *.log
 .DS_Store
+
+# UI build output
+ui/dist/
