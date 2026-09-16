@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>seven7</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #17181c;
+        color: #e8eaf0;
+        font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      main {
+        max-width: 520px;
+        padding: 24px;
+        background: #1e2026;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+      }
+      code {
+        color: #5b9dff;
+        font-family: 'SF Mono', Menlo, monospace;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>seven7 — UI bundle not embedded</h1>
+      <p>The engine is running, but <code>ui/dist</code> was empty when the app was built.</p>
+      <p>Build the interface and rebuild the app:</p>
+      <p><code>cd ui && npm install && npm run build</code></p>
+      <p>…or point the app at the Vite dev server: <code>-DS7_UI_DEV_SERVER=http://localhost:5174</code></p>
+    </main>
+  </body>
+</html>
