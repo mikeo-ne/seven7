@@ -93,9 +93,12 @@ jobs:
       - name: Configure (fetches JUCE, builds + embeds the UI)
         run: cmake -B build-app -S app -DCMAKE_BUILD_TYPE=Release -DS7_REQUIRE_UI=ON
 
+      - name: Build
+        run: cmake --build build-app --target seven7 -j 3
+
       - name: Verify the UI bundle is embedded
-        # juceaide writes mangled identifiers (index_html) to S7UIData.h and the
-        # quoted original filenames to the generated .cpp's originalFilenames[].
+        # juceaide generates S7UIData.h/.cpp at BUILD time; the header carries the
+        # mangled identifiers (index_html), the .cpp the quoted original filenames.
         run: |
           D=$(dirname "$(find build-app -name S7UIData.h | head -1)")
           test -d "$D" || { echo "S7UIData.h not generated"; exit 1; }
@@ -104,9 +107,6 @@ jobs:
           cat "$D"/*.cpp | grep -q '"index.html"' || { echo "index.html not embedded"; exit 1; }
           cat "$D"/*.cpp | grep -q '"index-[^"]*\.js"' || { echo "Vite JS bundle not embedded"; exit 1; }
           grep -q 'index_html' "$D/S7UIData.h" || { echo "header lacks index_html symbol"; exit 1; }
-
-      - name: Build
-        run: cmake --build build-app --target seven7 -j 3
 
       - name: Package (macOS)
         if: runner.os == 'macOS'
