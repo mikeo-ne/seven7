@@ -91,7 +91,15 @@ jobs:
           key: juce-9.0.2-${{ runner.os }}
 
       - name: Configure (fetches JUCE, builds + embeds the UI)
-        run: cmake -B build-app -S app -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build-app -S app -DCMAKE_BUILD_TYPE=Release -DS7_REQUIRE_UI=ON
+
+      - name: Verify the UI bundle is embedded
+        run: |
+          H=$(find build-app -name S7UIData.h | head -1)
+          test -n "$H" || { echo "S7UIData.h not generated"; exit 1; }
+          grep -q '"index.html"' "$H" || { echo "index.html not embedded"; exit 1; }
+          grep -q '"index-' "$H" || { echo "Vite asset not embedded"; exit 1; }
+          grep -c 'namedResourceList\|originalFilenames' "$H" >/dev/null && echo "embedded resources:" && grep -o '"[^"]*\.\(html\|js\|css\)"' "$H" | sort -u
 
       - name: Build
         run: cmake --build build-app --target seven7 -j 3
