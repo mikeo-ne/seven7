@@ -1,0 +1,122 @@
+name: App CI
+
+# Builds the seven7 desktop app (app/ = JUCE 9 shell + embedded ui/) on macOS
+# and Linux, and runs the UI unit + integration suites against s7bridge.
+
+on:
+  push:
+    branches:
+      - main
+      - 'arena/**'
+    paths:
+      - 'app/**'
+      - 'ui/**'
+      - 'engine/**'
+      - '.github/workflows/app-ci.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'ui/**'
+      - 'engine/**'
+      - '.github/workflows/app-ci.yml'
+
+jobs:
+  ui:
+    name: UI · typecheck · unit · integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install
+        working-directory: ui
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: ui
+        run: npx tsc --noEmit
+
+      - name: Build bundle
+        working-directory: ui
+        run: npm run build
+
+      - name: Unit tests
+        working-directory: ui
+        run: npm test
+
+      - name: Build engine bridge
+        run: |
+          cmake -B build -S engine -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j --target s7bridge
+
+      - name: Integration tests (UI ↔ engine)
+        working-directory: ui
+        run: |
+          ../build/s7bridge --port 8787 &
+          BRIDGE=$!
+          for i in $(seq 1 50); do curl -sf http://127.0.0.1:8787/api/health >/dev/null && break; sleep 0.2; done
+          npm run test:engine
+          kill $BRIDGE
+
+  app:
+    name: App · ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Linux GUI dependencies (JUCE 9)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libasound2-dev libjack-jackd2-dev libcurl4-openssl-dev \
+            libfontconfig1-dev libfreetype-dev libx11-dev libxcomposite-dev libxcursor-dev \
+            libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libxi-dev libwebkit2gtk-4.1-dev \
+            libglu1-mesa-dev mesa-common-dev
+
+      - name: Cache JUCE
+        uses: actions/cache@v4
+        with:
+          path: build-app/_deps/juce-src
+          key: juce-9.0.2-${{ runner.os }}
+
+      - name: Configure (fetches JUCE, builds + embeds the UI)
+        run: cmake -B build-app -S app -DCMAKE_BUILD_TYPE=Release -DS7_REQUIRE_UI=ON
+
+      - name: Build
+        run: cmake --build build-app --target seven7 -j 3
+
+      - name: Verify the UI bundle is embedded
+        # juceaide generates S7UIData.h/.cpp at BUILD time; the header carries the
+        # mangled identifiers (index_html), the .cpp the quoted original filenames.
+        run: |
+          D=$(dirname "$(find build-app -name S7UIData.h | head -1)")
+          test -d "$D" || { echo "S7UIData.h not generated"; exit 1; }
+          echo "embedded resources:"
+          cat "$D"/*.cpp | grep -o '"[^"]*\.\(html\|js\|css\|svg\|woff2\)"' | sort -u
+          cat "$D"/*.cpp | grep -q '"index.html"' || { echo "index.html not embedded"; exit 1; }
+          cat "$D"/*.cpp | grep -q '"index-[^"]*\.js"' || { echo "Vite JS bundle not embedded"; exit 1; }
+          grep -q 'index_html' "$D/S7UIData.h" || { echo "header lacks index_html symbol"; exit 1; }
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ls -R build-app/seven7_artefacts | head -20
+          ditto -c -k --keepParent build-app/seven7_artefacts/Release/seven7.app seven7-macos.zip
+
+      - name: Upload (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: seven7-macos
+          path: seven7-macos.zip

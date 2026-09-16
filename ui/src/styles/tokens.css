@@ -1,0 +1,59 @@
+/* seven7 — design tokens (docs/02 §1.1). Only density and disclosure change between modes. */
+:root {
+  --bg-app: #17181c;
+  --bg-panel: #1e2026;
+  --bg-raise: #262932;
+  --bg-sel: #31435e;
+  --bg-sunken: #121317;
+  --ink-1: #e8eaf0;
+  --ink-2: #aeb3c0;
+  --ink-3: #6e7485;
+  --acc-primary: #5b9dff;
+  --acc-record: #ff453a;
+  --acc-solo: #ffd60a;
+  --acc-mute: #ff9f0a;
+  --acc-fade: #64d2ff;
+  --acc-autom: #bf5af2;
+  --acc-ok: #30d158;
+  --acc-warn: #ff9f0a;
+  --grid-major: rgba(255, 255, 255, 0.14);
+  --grid-minor: rgba(255, 255, 255, 0.06);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+  --shadow-panel: 0 0 0 1px var(--hairline);
+
+  --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
+
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --lcd: 20px;
+
+  --r-ctl: 4px;
+  --r-panel: 6px;
+  --u: 4px;
+
+  --h-title: 34px;
+  --h-toolbar: 44px;
+  --h-control: 48px;
+  --h-status: 22px;
+  --h-ruler: 28px;
+
+  --w-inspector: 260px;
+  --w-header-canvas: 260px;
+  --w-header-precision: 360px;
+  --w-library: 300px;
+  --w-editlist: 240px;
+  --h-drawer: 288px;
+  --fader-travel: 240px;
+
+  --motion: 120ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0ms;
+  }
+}

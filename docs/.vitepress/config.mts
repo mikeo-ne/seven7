@@ -88,6 +88,7 @@ export default withMermaid(
             { text: '04 · Editing, Sequencing & Automation', link: '/04-editing-sequencing-automation' },
             { text: '05 · Logic Pro Compatibility', link: '/05-logic-pro-compatibility' },
             { text: '06 · Glossary', link: '/06-glossary' },
+            { text: '07 · UI ↔ Engine Bridge Protocol', link: '/07-ui-bridge-protocol' },
           ],
         },
       ],
